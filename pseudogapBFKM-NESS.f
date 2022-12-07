@@ -1,10 +1,7 @@
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     LOESEN DES KONDO_MODELL mit Kopplung an bosonischen Bad Aphi im 
 C     Grenzfall N,M -> unendlich mit ratio=M/N endlich
-C     in the presence of leads kept at finite bias voltage and temperature
-C     m indicates the Keldysh component: afm,sefm,...
-C     p indicates the retarded-advanced component
-C     KRAKRO is g(y)=1/Pi P \int dx f(x)/(y-x)
+C     in the presence of leads kept at finite bias voltage
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       PROGRAM NCA
       IMPLICIT REAL*8 (a-h,o-y)
