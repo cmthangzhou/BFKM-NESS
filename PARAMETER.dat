@@ -1,7 +1,7 @@
-4.0d-3 4.0d-5  61 10.0d0  !tempstart tempstop  #points  halfbandwidth
+4.0d-3 4.0d-5  61 15.0d0  !tempstart tempstop  #points  halfbandwidth
 2.0d0 0.0d0 0.5d0  !Kondo coupling and g=coupling to boson, ratio=M/N
 2.3d0                 !grid parameter \Gamma for logarithmic grid
-6000   1.0d-5 3.0d-3   !maximal number of iterations, tolerance, Beimischung
+6000   1.0d-5 0.05   !maximal number of iterations, tolerance, Beimischung
 0.7d0 5.0d-2 200.0d0     !parameter for bos.bath: exponent gamma,cutoff, fake \beta
 0.0d0 1.0d0 0.8d0 20.0d0     !parameter for powerlaw: exponent,cutoff, fake \beta
-2.0d-8  1.0  1.0          	!eV,T1,T2
+2.0d-15  1.0  1.0          	!eV,T1,T2

@@ -16,8 +16,8 @@
 
 
       D=omega(n)+1.0d-10
-      DO i=1,n
-ccc         DO i=1,n/2
+c      DO i=1,n
+         DO i=1,n/2
          exom=omega(i)
 *****************Integrand bei Null (ohne Bose+Fermi-Funktion)
 c         CALL LOCATE(omega,n,0.0d0,m)
@@ -70,9 +70,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
             IF(kk.eq.0) THEN
 **********************************************************integration
                aux=aux+0.5*(omega(j+1)-omega(j))*
-     &              (aphi(omega(j+1))*vert2+bose0(omega(j+1))
+     &              (aphi(omega(j+1))*vert2-bose0(omega(j+1))
      &              *aphi(omega(j+1))*wert2+
-     &              aphi(omega(j))*vert1+bose0(omega(j))
+     &              aphi(omega(j))*vert1-bose0(omega(j))
      &              *aphi(omega(j))*wert1)
 **********************************************************integration
 cc               write(86,*) omega(j+1),wert2
@@ -86,9 +86,9 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
                   vertn=afm(m+k)
 **********************************************************integration
                   aux=aux+0.5*(freq2-freq1)*
-     &                 (aphi(freq2)*vertn+bose0(freq2)
+     &                 (aphi(freq2)*vertn-bose0(freq2)
      &                 *aphi(freq2)*wertn+
-     &                 aphi(freq1)*vert1+bose0(freq1)
+     &                 aphi(freq1)*vert1-bose0(freq1)
      &                 *aphi(freq1)*wert1)
 **********************************************************integration
                   freq1=freq2
@@ -97,9 +97,9 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
                END DO
 **********************************************************integration
                aux=aux+0.5*(omega(j+1)-freq1)* !add last interval
-     &             (aphi(omega(j+1))*vert2+bose0(omega(j+1))
+     &             (aphi(omega(j+1))*vert2-bose0(omega(j+1))
      &              *aphi(omega(j+1))*wert2+
-     &              aphi(freq1)*vert1+bose0(freq1)
+     &              aphi(freq1)*vert1-bose0(freq1)
      &              *aphi(freq1)*wert1)
 **********************************************************integration
             ENDIF
@@ -108,11 +108,12 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
             vert1=vert2
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
-         sefpnew(i)=-(aux+www)/2.0
+c         sefpnew(i)=-(aux+www)/2.0
+         sefpnew(i)=aux/2.0
       END DO
-c      DO i=1,n/2
-c         sefpnew(n+1-i)=sefpnew(i)
-c      END DO
+      DO i=1,n/2
+         sefpnew(n+1-i)=sefpnew(i)
+      END DO
 
 
       RETURN
@@ -137,8 +138,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       
         
       D=omega(n)+1.0d-10
-      DO i=1,n
-c       DO i=1,n/2
+c      DO i=1,n
+       DO i=1,n/2
          exom=omega(i)
 *****************Integrand bei Null (ohne Bose+Fermi-Funktion)
          CALL LOCATE(omega,n,0.0d0,m)
@@ -230,11 +231,11 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
 c         sefpnew(i)=(aux+www)/2.0
-         sefpnew(i)=aux/2.0d0
+         sefpnew(i)=-aux/2.0d0
       END DO
-c        DO i=1,n/2
-c         sefpnew(n+1-i)=sefpnew(i)
-c      END DO
+        DO i=1,n/2
+         sefpnew(n+1-i)=sefpnew(i)
+      END DO
 
 
       RETURN
@@ -258,7 +259,7 @@ c      END DO
       EXTERNAL cspec,ferm1
       
       
-      DO i=1,n
+      DO i=1,n/2
 cc         exom=-omega(i)
          exom=omega(i)
          DO j=1,n
@@ -306,12 +307,12 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
      &          cspec(omega(j))*vert1-
      &          ferm1(omega(j))*cspec(omega(j))*wert1)
 ***********************************************************integration
-c               write(86,*) omega(j),wert2
+!               write(87,*) omega(j+1),vert2,wert2
             ELSE
 c            IF((m.eq.0).OR.(m.eq.n)) GOTO 20
                freq1=omega(j)
                DO k=1,kk
-c                  write(86,*) omega(m+k)-exom,abm(m+k)
+!                  write(86,*) omega(m+k)-exom,afm(m+k),afp(m+k)
                   freq2=omega(m+k)-exom
                   wertn=afp(m+k)
                   vertn=afm(m+k)
@@ -328,7 +329,7 @@ c                  write(86,*) omega(m+k)-exom,abm(m+k)
                END DO
 ***********************************************************integration
                aux=aux+0.5*(omega(j+1)-freq1)* !add last interval
-     &             (cspec(omega(j+1))*vert1-
+     &             (cspec(omega(j+1))*vert2-
      &              ferm1(omega(j+1))*cspec(omega(j+1))*wert2+
      &              cspec(freq1)*vert1-
      &              ferm1(freq1)*cspec(freq1)*wert1)
@@ -339,9 +340,13 @@ c                  write(86,*) omega(m+k)-exom,abm(m+k)
             vert1=vert2
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
-         sebpnew(i)=aux/2.0
+         sebpnew(i)=-aux/2.0
       END DO
-    
+      DO i=1,n/2
+         sebpnew(n+1-i)=-sebpnew(i)
+      END DO
+      
+
       RETURN
       END
 *********************************************************************************
@@ -362,9 +367,10 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
       DOUBLE PRECISION sefpnew(n)
       EXTERNAL aphi,bose0,ferm1
 
+c      CALL DZERO(afm,n)
       D=omega(n)+1.0d-10
-      DO i=1,n
-ccc         DO i=1,n/2
+cc      DO i=1,n
+         DO i=1,n/2
          exom=omega(i)
 *****************Integrand bei Null (ohne Bose+Fermi-Funktion)
 c         CALL LOCATE(omega,n,0.0d0,m)
@@ -417,9 +423,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
             IF(kk.eq.0) THEN
 **********************************************************integration
                aux=aux+0.5*(omega(j+1)-omega(j))*
-     &              (bose0(omega(j+1))*aphi(omega(j+1))*vert2+
+     &              (bose0(omega(j+1))*aphi(omega(j+1))*vert2-
      &              aphi(omega(j))*wert2+
-     &              bose0(omega(j))*aphi(omega(j))*vert1+
+     &              bose0(omega(j))*aphi(omega(j))*vert1-
      &              aphi(omega(j))*wert1)
 **********************************************************integration
 cc               write(86,*) omega(j+1),wert2
@@ -433,9 +439,9 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
                   vertn=afm(m+k)
 **********************************************************integration
                   aux=aux+0.5*(freq2-freq1)*
-     &                 (bose0(freq2)*aphi(freq2)*vertn+
+     &                 (bose0(freq2)*aphi(freq2)*vertn-
      &                 aphi(freq2)*wertn+
-     &                 bose0(freq1)*aphi(freq1)*vert1+
+     &                 bose0(freq1)*aphi(freq1)*vert1-
      &                 aphi(freq1)*wert1)
 **********************************************************integration
                   freq1=freq2
@@ -444,9 +450,9 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
                END DO
 **********************************************************integration
                aux=aux+0.5*(omega(j+1)-freq1)* !add last interval
-     &              (bose0(omega(j+1))*aphi(omega(j+1))*vert2+
+     &              (bose0(omega(j+1))*aphi(omega(j+1))*vert2-
      &              aphi(omega(j+1))*wert2+
-     &              bose0(freq1)*aphi(freq1)*vert1+
+     &              bose0(freq1)*aphi(freq1)*vert1-
      &              aphi(freq1)*wert1)
 **********************************************************integration
             ENDIF
@@ -454,11 +460,11 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
             wert1=wert2
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
-         sefpnew(i)=(aux+www)/2.0
+         sefpnew(i)=-(aux+www)/2.0
       END DO
-c      DO i=1,n/2
-c         sefpnew(n+1-i)=sefpnew(i)
-c      END DO
+      DO i=1,n/2
+         sefpnew(n+1-i)=-sefpnew(i)
+      END DO
 
 
 
@@ -484,8 +490,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       
         
       D=omega(n)+1.0d-10
-      DO i=1,n
-ccc       DO i=1,n/2
+cc      DO i=1,n
+       DO i=1,n/2
          exom=omega(i)
 *****************Integrand bei Null (ohne Bose+Fermi-Funktion)
          CALL LOCATE(omega,n,0.0d0,m)
@@ -576,11 +582,12 @@ cc                  write(86,*) omega(m+k)-exom,afp(m+k)
             vert1=vert2
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
-         sefpnew(i)=(aux+www)/2.0
+         sefpnew(i)=-(aux+www)/2.0
       END DO
-c        DO i=1,n/2
-c         sefpnew(n+1-i)=sefpnew(i)
-c      END DO
+        DO i=1,n/2
+         sefpnew(n+1-i)=-sefpnew(i)
+      END DO
+
       RETURN
       END
 
@@ -602,7 +609,7 @@ c      END DO
       EXTERNAL cspec,ferm1
       
       
-      DO i=1,n
+      DO i=1,n/2
 cc         exom=-omega(i)
          exom=omega(i)
          DO j=1,n
@@ -683,9 +690,11 @@ c                  write(86,*) omega(m+k)-exom,abm(m+k)
             vert1=vert2
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
          END DO
-         sebpnew(i)=-aux/2.0
+         sebpnew(i)=aux/2.0
       END DO
-
+      DO i=1,n/2
+         sebpnew(n+1-i)=sebpnew(i)
+      END DO
 
 
       RETURN

@@ -1,7 +1,7 @@
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     LOESEN DES KONDO_MODELL mit Kopplung an bosonischen Bad Aphi im 
 C     Grenzfall N,M -> unendlich mit ratio=M/N endlich
-C     in the presence of leads kept at finite bias voltage
+C     in the presence of leads kept at finite bias voltage and temperature
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       PROGRAM NCA
       IMPLICIT REAL*8 (a-h,o-y)
@@ -121,43 +121,34 @@ cc      PARAMETER (naux=N+(N-1)*nadd,ngrid=2*naux)
       CALL READIN(sefpold,sebpold,sefmold,sebmold,omega,ngrid)
 
       DO i=1,ngrid
-         sefp(i)=sefpold(i)/pi
-         sebp(i)=sebpold(i)/pi
-         sefm(i)=sefmold(i)/pi
-         sebm(i)=sebmold(i)/pi
+         sefp(i)=sefpold(i)
+         sebp(i)=sebpold(i)
+         sefm(i)=sefmold(i)
+         sebm(i)=sebmold(i)
       END DO
 
-      CALL KRAKRO(ngrid,omega,sefp,sefr) !real part of selfenergies
-      CALL DSCAL(ngrid,-1.0d0,sefr,1)
-      CALL KRAKRO(ngrid,omega,sebp,sebr) !real part of selfenergies
-      CALL DSCAL(ngrid,-1.0d0,sebr,1)
-      
-      CALL FERMIFUNC0
-      CALL BOSEFUNC0(omega,temp)
-      DO i=1,ngrid
-         sefm(i)=(1.0-2.0*ferm0(beta*omega(i)))*sefm(i)
-         sebm(i)=bose0(omega(i))*sebm(i)
-         WRITE(71,*) omega(i),sebm(i),sefm(i)
-         WRITE(72,*) omega(i),bose0(omega(i))
-      END DO
-      RG=0.0d0
+      CALL KRAKRO(ngrid,omega,sefp,sefr)
+      CALL KRAKRO(ngrid,omega,sebp,sebr)
+
+
 ************************************************************************
-C      RJ=RJ0*xxx
       RJ=T1+T2
       IF (DABS(RJ).LT.1.0d-14) RJ=1.0d-14
 
       DO i=1,ngrid
          afp(i)=sefp(i)/
-     &          ((omega(i)-rlambd0+pi*sefr(i))**2+pi**2*sefp(i)**2)
+     &          ((omega(i)+rlambd0-sefr(i))**2+(sefp(i))**2)
          abp(i)=sebp(i)/
-     &          ((-1.0/RJ+pi*sebr(i))**2+pi**2*sebp(i)**2)
+     &          ((1.0/RJ-sebr(i))**2+(sebp(i))**2)
 C
          afm(i)=sefm(i)/
-     &          ((omega(i)-rlambd0+pi*sefr(i))**2+pi**2*sefp(i)**2)
+     &          ((omega(i)+rlambd0-sefr(i))**2+(sefp(i))**2)
          abm(i)=sebm(i)/
-     &          ((-1.0/RJ+pi*sebr(i))**2+pi**2*sebp(i)**2)
+     &          ((1.0/RJ-sebr(i))**2+(sebp(i))**2)
       END DO
       
+
+
 ************************************************************************
 ******************get DoS and Fermi function****************************
       CALL FERMIFUNC0
@@ -175,11 +166,6 @@ C
       DO i=1,ngrid
          WRITE(18,*) omega(i),aphi(omega(i))
          WRITE(15,*) omega(i),cspec(omega(i))
-         WRITE(17,*) omega(i),afp(i),afm(i)
-c         WRITE(16,*) omega(i),abp(i),abm(i)
-         WRITE(27,*) omega(i),sebp(i)
-         WRITE(26,*) omega(i),sefp(i)
-         WRITE(28,*) omega(i),ferm1(omega(i))
       END DO
       CLOSE(18)
       CLOSE(15)
@@ -189,21 +175,17 @@ c         WRITE(16,*) omega(i),abp(i),abm(i)
 **********************START ITERATION***********************************
 ************************************************************************
 ************************************************************************
-C      OPEN(UNIT=98,FILE='STATSUS.dat',STATUS='UNKNOWN')
-C      OPEN(UNIT=99,FILE='TMATRIX.dat',STATUS='UNKNOWN')
  
       DO iterate=1,maxiterate
-         
+
          CALL SIGMF1m(beta,afp,afm,omega,ngrid,scr)
          CALL SIGMF2m(beta,abp,abm,omega,ngrid,sefpnew)
          CALL SIGMBm(beta,afp,afm,omega,ngrid,sebpnew)
+         CALL DSCAL(ngrid,1.0d0/pi,scr,1)
+         CALL DSCAL(ngrid,1.0d0/pi,sefpnew,1)
+         CALL DSCAL(ngrid,1.0d0/pi,sebpnew,1)
 
-      DO i=1,ngrid
-         WRITE(79,*) omega(i),sefpnew(i)
-         WRITE(78,*) omega(i),sebpnew(i)
-         WRITE(77,*) omega(i),scr(i)
-      END DO
-     
+ 
       
 
       DO i=1,ngrid
@@ -213,25 +195,18 @@ C      OPEN(UNIT=99,FILE='TMATRIX.dat',STATUS='UNKNOWN')
       CALL SIGMF1p(beta,afp,afm,omega,ngrid,scr)
       CALL SIGMF2p(beta,abp,abm,omega,ngrid,sefmnew)
       CALL SIGMBp(beta,afp,afm,omega,ngrid,sebmnew)
-
-      DO i=1,ngrid
-         WRITE(81,*) omega(i),sefmnew(i)
-         WRITE(82,*) omega(i),sebmnew(i)
-         WRITE(83,*) omega(i),scr(i)
-      END DO
-      STOP
+      CALL DSCAL(ngrid,1.0d0/pi,scr,1)
+      CALL DSCAL(ngrid,1.0d0/pi,sefmnew,1)
+      CALL DSCAL(ngrid,1.0d0/pi,sebmnew,1)
 
       DO i=1,ngrid
          sefmnew(i)=ratio*sefmnew(i)+RG**2*scr(i)
       END DO
+      
+     
 
-***********************update selfenergies******************************
-c         DO i=1,ngrid
-c            sefpold(i)=sefp(i)
-c            sefp(i)=(xupdt*sefpnew(i)+sefpold(i))/(1.0d0+xupdt)
-c            sebpold(i)=sebp(i)
-c            sebp(i)=(xupdt*sebpnew(i)+sebpold(i))/(1.0d0+xupdt)
-c         END D
+
+         
          IF(iterate.LE.nBroyden) THEN
             kount=iterate
             DO i=1,ngrid
@@ -271,7 +246,6 @@ c         END D
             END DO
          ENDIF
 
-
              
          CALL  BROYDEN(kount,4*ngrid,nBroyden,Fmatrix,Vmatrix,Vout)
 
@@ -284,17 +258,12 @@ c         END D
          END DO
          
 *******************************************
-         CALL KRAKRO(ngrid,omega,sefp,sefr) !real part of selfenergies
-         CALL DSCAL(ngrid,-1.0d0,sefr,1)
-         CALL KRAKRO(ngrid,omega,sebp,sebr) !real part of selfenergies
-         CALL DSCAL(ngrid,-1.0d0,sebr,1)
+         CALL KRAKRO(ngrid,omega,sefp,sefr)
+         CALL KRAKRO(ngrid,omega,sebp,sebr)
 ******************calculate rlambda0 update*****************************
          rlambold=rlambd0
 
-ctest         CALL RUPDATE(sefp,sefr,omega,beta,rlambd0,delta)
         rlambd0=0.0d0
-
-c         CALL SHIFT(delta,omega,ngrid,sefp,sefm,sefr,sebp,sebm,sebr)
         
 ************************************************************************
 ****************calculate new spectral functions************************
@@ -302,30 +271,25 @@ c         CALL SHIFT(delta,omega,ngrid,sefp,sefm,sefr,sebp,sebm,sebr)
             afpold(i)=afp(i)
             afmold(i)=afm(i)
             afp(i)=sefp(i)/
-     &           ((omega(i)-rlambd0+pi*sefr(i))**2+pi**2*sefp(i)**2)
+     &           ((omega(i)+rlambd0-sefr(i))**2+(sefp(i))**2)
             afm(i)=sefm(i)/
-     &           ((omega(i)-rlambd0+pi*sefr(i))**2+pi**2*sefp(i)**2)
+     &           ((omega(i)+rlambd0-sefr(i))**2+(sefp(i))**2)
             abpold(i)=abp(i)
             abmold(i)=abm(i)
             abp(i)=sebp(i)/
-     &          ((-1.0/RJ+pi*sebr(i))**2+pi**2*sebp(i)**2)
-            abm(i)=sebm(i)/
-     &          ((-1.0/RJ+pi*sebr(i))**2+pi**2*sebp(i)**2)
+     &           ((1.0/RJ-sebr(i))**2+(sebp(i))**2)
+            abm(i)=sebm(i)/   
+     &           ((1.0/RJ-sebr(i))**2+(sebp(i))**2)
          END DO
 
-         DO i=1,ngrid
-            WRITE(13,*) omega(i),afm(i),afmold(i)
-            WRITE(14,*) omega(i),afp(i),afpold(i)
-            WRITE(18,*) omega(i),abp(i),abpold(i)
-            WRITE(16,*) omega(i),abm(i),abmold(i)
-         END DO
-         
+        
 
          CALL ROUT('afp.dat',ngrid,omega,afp)
          CALL ROUT('abp.dat',ngrid,omega,abp)
 
+        
 ************************************************************************
-         CALL PNNESS(ngrid,omega,afm,afp,rnf)
+         CALL PNNESS(ngrid,omega,afm,rnf)
          print*,'occupation: ',2.0*rnf,' lambda: ',rlambd0
          
 ********************CHECK for CONVERGENCE*******************************
@@ -334,33 +298,40 @@ c         CALL SHIFT(delta,omega,ngrid,sefp,sefm,sefr,sebp,sebm,sebr)
          xx2=0.0d0
          xx3=0.0d0
          i0=0
+         i1=0
+         i2=0
+         i3=0
          DO i=1,ngrid
             xxx=dabs(afp(i)-afpold(i))/(dabs(afp(i))+1.0d-70)
             IF(xxx.GT.xx0) THEN
             xx0=xxx
             i0=i
-            out=omega(i0)
+            out=omega(i)
             ENDIF
             xxx=dabs(abp(i)-abpold(i))/(dabs(abp(i))+1.0d-70)
             IF(xxx.GT.xx1) THEN
             xx1=xxx
-            i0=ngrid+i
+            i1=ngrid+i
             out=omega(i)
             ENDIF
             xxx=dabs(afm(i)-afmold(i))/(dabs(afm(i))+1.0d-70)
             IF(xxx.GT.xx2) THEN
             xx2=xxx
-            i0=i
-            out=omega(i0)
+            i2=2*ngrid+i
+            out=omega(i)
             ENDIF
             xxx=dabs(abm(i)-abmold(i))/(dabs(abm(i))+1.0d-70)
             IF(xxx.GT.xx3) THEN
             xx3=xxx
-            i0=ngrid+i
+            i3=3*ngrid+i
             out=omega(i)
             ENDIF
          END DO
-         print*,'deltax: ',xx0,xx1,xx2,xx3,i0,out
+         xx0=max(xx0,xx1)
+         xx0=max(xx0,xx2)
+         xx0=max(xx0,xx3)
+         print*,'deltax: ',xx0,xx1,xx2,xx3
+         print*,i0,i1,i2,i3
          print*,'Iteration: ',iterate
          
          IF(xx0.LT.xtol) THEN
@@ -407,17 +378,8 @@ c         CALL SHIFT(delta,omega,ngrid,sefp,sefm,sefr,sebp,sebm,sebr)
          END IF
       CALL ROUT('SEFP.dat',ngrid,omega,sefp)
       CALL ROUT('SEBP.dat',ngrid,omega,sebp)
-**************************T-MATRIX**************************************
-      CALL tmatrix(omega,ngrid,beta,afp,abp,tmat)
-      CALL DSCAL(ngrid,1.0d0/pi,suszi,1)
-      OPEN(UNIT=15,FILE='tmat.dat'//handle,STATUS='UNKNOWN')
-      DO i=1,ngrid
-         WRITE(15,*) omega(i),tmat(i)
-      END DO
-      CLOSE(15)
-      yyy=tmat(m)+(tmat(m+1)-tmat(m))/(omega(m+1)-omega(m))
-     &     *(0.0d0-omega(m))
-      WRITE(99,*) temp,yyy
+      CALL ROUT('SEFM.dat',ngrid,omega,sefm)
+      CALL ROUT('SEBM.dat',ngrid,omega,sebm)
 ************************************************************************
       OPEN(UNIT=15,FILE='RESULTS.dat',STATUS='UNKNOWN')
       WRITE(15,*) rlambd0
@@ -433,115 +395,3 @@ c         CALL SHIFT(delta,omega,ngrid,sefp,sefm,sefr,sebp,sebm,sebr)
       STOP
       END
       
-************************************************************************
-************************************************************************
-*************************CALCULATE T-MATRIX*****************************
-************************************************************************
-      SUBROUTINE tmatrix(omega,n,beta,afp,abp,tmat)
-      IMPLICIT NONE
-      INTEGER n
-      DOUBLE PRECISION omega(n),afp(n),abp(n),beta,tmat(n)
-      INTEGER i,j,k,kk,l,m,mm,iscr(n)
-      DOUBLE PRECISION aux,wert1,wert2,freq,aux2
-      DOUBLE PRECISION freq1,freq2,wertn
-      DOUBLE PRECISION exom,omex
-      DOUBLE PRECISION ferm0,bose0
-      DOUBLE PRECISION wfreq1,wfreq2,xxx,yyy,www,D,pi
-      EXTERNAL ferm0,bose0
-
-      pi=4.0d0*datan(1.0d0)
-      D=omega(n)+1.0d-10
-      DO i=1,n
-         exom=omega(i)
-*****************Integrand bei Null (ohne Bose+Fermi-Funktion)
-         CALL LOCATE(omega,n,0.0d0,m)
-         xxx=abp(m)+(abp(m+1)-abp(m))/(omega(m+1)-omega(m))
-     &           *(0.0d0-omega(m))
-         xxx=afp(i)*xxx
-***Integral (bose+fermi)
-         yyy=-exom+1.0/beta*(dlog(1.0d0+dexp(-beta*(D-exom)))
-     &        -1.0/beta*dlog(1.0d0+dexp(-beta*(D+exom))))
-
-         www=xxx*yyy            !to be added to integral
-*******************************************************
-         DO j=1,n
-            omex=exom+omega(j)  !frequency argument of abm
-            CALL locate(omega,n,omex,m)
-            iscr(j)=m           !index of epsilon on eps+exom
-         END DO
-         aux=0.0d0
-         m=iscr(1)
-         IF(m.EQ.0) THEN
-            wert1=0.0d0
-         ELSEIF(m.EQ.n) THEN
-            wert1=0.0d0
-         ELSE
-            wert1=afp(m)+(afp(m+1)-afp(m))/(omega(m+1)-omega(m))
-     &           *(omega(1)+exom-omega(m)) !interpolate A_b
-         ENDIF
-         DO j=1,n-1             !integration loop
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
-                                !if iscr(j)=iscr(j+1),no add. points
-            l=iscr(j+1)
-            m=iscr(j)
-            kk=l-m
-            IF(l.EQ.0) THEN
-               wert2=0.0d0
-            ELSEIF(l.EQ.n) THEN
-               wert2=0.0d0
-            ELSE
-               wert2=afp(l)+(afp(l+1)-afp(l))/(omega(l+1)-omega(l))
-     &              *(omega(j+1)+exom-omega(l)) !interpolate A_b
-            ENDIF
-            IF(kk.eq.0) THEN
-***********************************************************integration
-               aux=aux+0.5*(omega(j+1)-omega(j))*
-     &              (abp(j+1)*
-     &          (bose0(omega(j+1))+ferm0(beta*(omega(j+1)+exom)))*
-     &          wert2+abp(j)*
-     &          (bose0(omega(j))+ferm0(beta*(omega(j)+exom)))*
-     &              wert1)
-***********************************************************integration
-c               write(86,*) omega(j),wert2
-            ELSE
-c            IF((m.eq.0).OR.(m.eq.n)) GOTO 20
-               freq1=omega(j)
-               wfreq1=abp(j)
-               DO k=1,kk
-c                  write(86,*) omega(m+k)-exom,abm(m+k)
-                  freq2=omega(m+k)-exom
-                  CALL LOCATE(omega,n,freq2,mm)
-                  wfreq2=abp(mm)+(abp(mm+1)-abp(mm))/
-     &              (omega(mm+1)-omega(mm))
-     &           *(freq2-omega(mm)) !interpolate A_f
-                  wertn=afp(m+k)
-***********************************************************integration
-                  aux=aux+0.5*(freq2-freq1)*
-     &                 (wfreq2*
-     &             (bose0(freq2)+ferm0(beta*(freq2+exom)))*
-     &             wertn+wfreq1*
-     &                 (bose0(freq1)+ferm0(beta*(freq1+exom)))*
-     &                 wert1)
-***********************************************************integration
-                  freq1=freq2
-                  wfreq1=wfreq2
-                  wert1=wertn
-               END DO
-***********************************************************integration
-               aux=aux+0.5*(omega(j+1)-freq1)* !add last interval
-     &             (abp(j+1)*
-     &          (bose0(omega(j+1))+ferm0(beta*(omega(j+1)+exom)))*
-     &              wert2+wfreq1*
-     &              (bose0(freq1)+ferm0(beta*(freq1+exom)))*
-     &              wert1)
-***********************************************************integration
-            ENDIF
- 20         CONTINUE
-            wert1=wert2
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnegative freq
-         END DO
-         tmat(i)=-(aux+www)
-      END DO
-    
-      RETURN
-      END

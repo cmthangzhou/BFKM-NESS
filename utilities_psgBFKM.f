@@ -190,9 +190,9 @@ c      aux=5.0d0
       DO i=m2+1,ngrid
          dos(i)=exp(-xw(i)**2/pi)
       END DO
-      DO i=1,ngrid
-         write(19,*) xw(i),dos(i)
-      END DO
+c      DO i=1,ngrid
+c         write(19,*) xw(i),dos(i)
+c      END DO
 
 c      DO i=1,n
 c         IF(dabs(xw(i)).LT.aux) THEN
@@ -211,88 +211,17 @@ c      END DO
       DO i=1,ngrid-1
          weight=weight+0.5*(xw(i+1)-xw(i))*(dos(i+1)+dos(i))
       END DO
-c      weight=weight/pi
+      weight=weight/pi
 
       DO i=1,ngrid
          dos(i)=dos(i)/weight
       END DO
       xxx=weight
-*************
 ***********************************************
-*     divide DOS by value at the fermi energy
-***********************************************
-      CALL KRAKRO(ngrid,xw,dos,gfr)
-      CALL DSCAL(ngrid,-1.0d0,gfr,1)
-c      OPEN(unit=19,FILE='fermBath.dat',STATUS='unknown')
-c      DO i=1,ngrid
-c         write(19,*) xw(i),dos(i),gfr(i)
-c      END DO
-c      CLOSE(19)
-c      STOP
 
       RETURN
       END
-***********************************************************************
-***********************************************************************
-      SUBROUTINE GRIDFIND(freq,gam_arr,N,Nadd,ngrid,Gamma,logam,X,
-     &     nindex)
-      IMPLICIT NONE
-      INTEGER N,Nadd,ngrid,nindex
-      INTEGER naux,nhelp,iaux
-      DOUBLE PRECISION Gamma,logam,X,freq(ngrid),gam_arr(N)
-      DOUBLE PRECISION dax
-      
-      naux=ngrid/2
-      dax=dabs(X)
-      IF(X.GT.freq(ngrid)) THEN
-         nindex=ngrid
-      ELSEIF(X.LT.freq(1)) THEN
-         nindex=1
-      ELSEIF((X.GT.freq(naux)).AND.(X.LT.freq(naux+1))) THEN
-         nindex=naux
-      ELSEIF(X.GE.freq(naux+1)) THEN
-         iaux=INT(log(dax)*logam)
-         nhelp=INT((dax*gam_arr(iaux+1)-1.d0)/(Gamma-1.d0)*(Nadd+1))
-         nindex=ngrid-iaux*(Nadd+1)-1-(Nadd-nhelp)
-      ELSE
-         iaux=INT(log(dax)*logam)
-         nhelp=INT((dax*gam_arr(iaux+1)-1.d0)/(Gamma-1.d0)*(Nadd+1))
-         nindex=iaux*(Nadd+1)+1+(Nadd-nhelp)
-      ENDIF
-      END
-***********************************************************************
-***********************************************************************
-      SUBROUTINE GRIDFIND2(Dmax,Dmin,N,Nadd,ngrid,Gamma,logam,X,nindex)
-      IMPLICIT NONE
-      INTEGER N,Nadd,ngrid,nindex
-      INTEGER naux,nhelp,iaux
-      DOUBLE PRECISION Gamma,logam,X,Dmax,Dmin
-      DOUBLE PRECISION dax
-      
-      naux=ngrid/2
-      dax=dabs(X)
-      IF(x.GE.0.0d0) THEN
-         IF((dax.GE.Dmin).AND.(dax.LT.Dmax)) THEN
-            iaux=INT(log(dax)*logam)
-            nhelp=INT((dax*Gamma**(iaux+1)-1.d0)/(Gamma-1.d0)*(Nadd+1))
-            nindex=ngrid-iaux*(Nadd+1)-1-(Nadd-nhelp)
-         ELSEIF(dax.LT.Dmin) THEN
-            nindex=naux
-         ELSE
-            nindex=ngrid
-         ENDIF
-      ELSE
-         IF((dax.GE.Dmin).AND.(dax.LT.Dmax)) THEN
-            iaux=INT(log(dax)*logam)
-            nhelp=INT((dax*Gamma**(iaux+1)-1.d0)/(Gamma-1.d0)*(Nadd+1))
-            nindex=iaux*(Nadd+1)+1+(Nadd-nhelp)
-         ELSEIF(dax.LT.Dmin) THEN
-            nindex=0
-         ELSE
-            nindex=naux
-         ENDIF    
-      END IF
-      END
+
 ***********************************************************************
 ***********************************************************************
       SUBROUTINE KRAKRO(n,x,im,re)
@@ -380,7 +309,6 @@ c kramers kronig-relation
       PARAMETER (nwv=nnn+4*nvolt)
       PARAMETER (ngrid=nwv+4*mnew)
       PARAMETER(n0=ngrid)
-
       DOUBLE PRECISION  boseown(n0),omega(n0)
       DOUBLE PRECISION omega0(n0),temp,beta
       COMMON /bosekram/ boseown,omega0
@@ -417,7 +345,6 @@ c kramers kronig-relation
       PARAMETER (nwv=nnn+4*nvolt)
       PARAMETER (ngrid=nwv+4*mnew)
       PARAMETER(n0=ngrid)
-
       DOUBLE PRECISION xxx,a
       DOUBLE PRECISION  boseown(n0),omega(n0)
       COMMON /bosekram/ boseown,omega
@@ -435,42 +362,7 @@ c kramers kronig-relation
       END
 ***********************************************************************
 ***********************************************************************
-      SUBROUTINE RUPDATEsss(sefm,sefp,sefr,sebm,sebp,sebr,rexp,omega,n,
-     &     beta,epsilon,rlambd0)
-      IMPLICIT NONE
-      INTEGER n,i,k,nspin
-      PARAMETER(nspin=2)
-      DOUBLE PRECISION omega(n),rlambd0,epsilon
-      DOUBLE PRECISION sefm(n),sefp(n),sefr(n),afm(n)
-      DOUBLE PRECISION sebm(n),sebp(n),sebr(n),abm(n)
-      DOUBLE PRECISION scr(n),rexp(n)
-      DOUBLE PRECISION beta,delta,value
-      DO i=1,n/2
-         k=i+n/2
-         afm(i)=sefm(i)/
-     &          ((omega(i)-epsilon+rlambd0-sefr(i))**2+sefp(i)**2)
-         afm(k)=rexp(n/2-i+1)*sefp(k)/
-     &          ((omega(k)-epsilon+rlambd0-sefr(k))**2+sefp(k)**2)
-         abm(i)=sebm(i)/
-     &          ((omega(i)+rlambd0-sebr(i))**2+sebp(i)**2)
-         abm(k)=rexp(n/2-i+1)*sebp(k)/
-     &          ((omega(k)+rlambd0-sebr(k))**2+sebp(k)**2)
-      END DO
 
-
-      DO i=1,n
-         scr(i)=nspin*afm(i)+abm(i)
-      END DO
-      
-      value=0.0d0
-      DO i=1,n-1
-         value=value+0.5d0*(scr(i+1)+scr(i))*
-     &    (omega(i+1)-omega(i))
-      END DO
-      delta=-dlog(value)/beta
-      rlambd0=rlambd0+delta
-      RETURN
-      END
 ***********************************************************************
 ***********************************************************************
       subroutine dzero(darray,ndim)
@@ -532,43 +424,6 @@ c---------------------------------------------------------------------
 **********************************************************************
 **********************************************************************
 **********************************************************************
-**********************************************************************
-      SUBROUTINE FERMFUNC1(omega,temp)
-      IMPLICIT NONE
-      INTEGER i,nn,n0,n,nadd,naux,ngrid,new,nNeu,mnew,nnn,nvolt,nwv
-      INCLUDE 'PARAMETER' 
-      PARAMETER (naux=N+(N-1)*nadd,nNeu=2*naux)
-      PARAMETER (nnn=nNeu+4*new)
-      PARAMETER (nwv=nnn+4*nvolt)
-      PARAMETER (ngrid=nwv+4*mnew)
-      PARAMETER(n0=ngrid)
-
-      DOUBLE PRECISION  fermown(n0),omega(n0)
-      DOUBLE PRECISION omega0(n0),temp,beta,xxxmax,efact,xxx
-      PARAMETER(xxxmax=300.0d0)
-      COMMON /fermkram/ fermown,omega0
-
-      beta=1.0d0/temp
-      DO i=1,n0
-         omega0(i)=omega(i)
-      END DO
-      DO i=1,n0
-         xxx=beta*omega(i)
-         if (dabs(xxx).le.xxxmax) then
-            efact=dexp(xxx)
-            fermown(i)=1.d0/(efact+1.d0)
-         else if (xxx.lt.-xxxmax) then
-            fermown(i)=1.d0
-         else
-            fermown(i)=0.d0
-         end if
-      END DO
-         
- 
-      RETURN
-      END
-***********************************************************************
-***********************************************************************
       DOUBLE PRECISION FUNCTION ferm1(xxx)
       IMPLICIT NONE
       INTEGER i,n,nadd,naux,ngrid,n0,new,Nneu,mnew,nnn,nvolt,nwv
@@ -585,7 +440,7 @@ c---------------------------------------------------------------------
       COMMON /fermkram/ fermown,omega
 
       CALL LOCATE(omega,n0,xxx,m)
-      IF(m.LT.1) THEN
+      IF(m.LE.1) THEN
          ferm1=-1.0d0
       ELSEIF(m.GE.n0) THEN
          ferm1=1.0d0
@@ -610,20 +465,14 @@ c---------------------------------------------------------------------
       IF(dabs(xxx).LT.(1.0d-12)) THEN
          aphi=0.0d0
       ELSEIF ((xxx.LT.0.0d0).AND.(xxx.GT.-cut)) THEN
-         aphi=-pi*pref*dabs(xxx)**gamma
-c         aphi=-pi*1.0d0/dlog(1.0d0/dabs(xxx))
-c         aphi=-pi/2.0/((dlog(1.0d0/dabs(xxx)))**2+pi**2/4.0)
-      ELSEIF ((xxx.GT.0.0d0).AND.(xxx.LT.cut)) THEN
          aphi=pi*pref*dabs(xxx)**gamma
-c         aphi=pi*1.0d0/dlog(1.0d0/dabs(xxx))
-c         aphi=pi/2.0/((dlog(1.0d0/dabs(xxx)))**2+pi**2/4.0)
+
+      ELSEIF ((xxx.GT.0.0d0).AND.(xxx.LT.cut)) THEN
+         aphi=-pi*pref*dabs(xxx)**gamma
+
       ELSE
-****nur log Fall;anderfall ausdokumentieren!!!!!!!
-c         xhelp=pi/2.0/((dlog(1.0d0/dabs(cut)))**2+pi**2/4.0)
-c         aphi=sign(1.0d0,xxx)*pi/2.0*xhelp*
-c     &   ferm0(beta*(xxx-cut-4.0/beta))*ferm0(beta*(-xxx-cut-4.0/beta))
-*******************
-         aphi=sign(1.0d0,xxx)*pi*pref*xhelp*
+
+         aphi=-sign(1.0d0,xxx)*pi*pref*xhelp*
      &   ferm0(beta*(xxx-cut-4.0/beta))*ferm0(beta*(-xxx-cut-4.0/beta))   
       ENDIF
 
@@ -664,7 +513,6 @@ c     &   ferm0(beta*(xxx-cut-4.0/beta))*ferm0(beta*(-xxx-cut-4.0/beta))
       PARAMETER (nwv=nnn+4*nvolt)
       PARAMETER (ngrid=nwv+4*mnew)
       PARAMETER (n0=ngrid)
-
       DOUBLE PRECISION J1,J2,x1,x2,V
       DOUBLE PRECISION fermown(n0),omega(n0)
       DOUBLE PRECISION omega0(n0),temp,beta,xxx
@@ -696,5 +544,26 @@ c     &   ferm0(beta*(xxx-cut-4.0/beta))*ferm0(beta*(-xxx-cut-4.0/beta))
       
       RETURN
       END
-**********************************************************************
-**********************************************************************
+************************************************************************
+************************************************************************
+*********************CALCULATES PARTICLE NUMBERS************************
+      SUBROUTINE PNNESS(n,omega,field1,rnf)
+      IMPLICIT NONE
+      INTEGER i,j,n
+      DOUBLE PRECISION exom,rnf,beta,field1(n),omega(n)
+      DOUBLE PRECISION wert1,wert2,wertn,freq1,freq2
+      DOUBLE PRECISION omex,aux
+      DOUBLE PRECISION pi
+      PARAMETER(pi=3.1415926535898d0)
+
+      aux=0.0d0
+     
+      DO j=1,n-1
+         aux=aux+0.5*(omega(j+1)-omega(j))*(field1(j+1)+field1(j))
+      END DO
+
+      rnf=0.5*(1.0-aux)
+      
+      RETURN
+      END
+

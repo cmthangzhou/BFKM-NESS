@@ -1,0 +1,5 @@
+       PARAMETER (N=32)
+       PARAMETER (nadd=6)
+       PARAMETER (new=10)
+       PARAMETER (nvolt=10)
+       PARAMETER (mnew=20)	

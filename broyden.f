@@ -3,8 +3,6 @@
 ***********************************************************************
       SUBROUTINE broyden(m,n,mmax,Fmatrix,Vmatrix,Vout)
 ***********************************************************************
-* This is an implementation that follows PRB vol{80} 125125 (2009)
-* In particular formulae (19)-(25)
 * Note that all fields are assumed to be real. 
 ************************************************************************
       IMPLICIT none
